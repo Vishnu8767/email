@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vishnu AI Email Bot</title>
+<link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">✉</div>
+    <div>
+      <div class="brand-name">EmailBot AI</div>
+      <div class="brand-sub">by Vishnu</div>
+    </div>
+  </div>
+
+  <nav>
+    <a class="nav-item active" data-tab="monitor" onclick="switchTab('monitor',this)">
+      <span class="nav-icon">◉</span> Monitor
+    </a>
+    <a class="nav-item" data-tab="inbox" onclick="switchTab('inbox',this)">
+      <span class="nav-icon">📥</span> Inbox
+    </a>
+    <a class="nav-item" data-tab="config" onclick="switchTab('config',this)">
+      <span class="nav-icon">⚙</span> Config
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="status-dot-wrap">
+      <div class="status-dot" id="sidebar-dot"></div>
+      <span id="sidebar-status-text">Stopped</span>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- ── MONITOR TAB ── -->
+  <div id="tab-monitor" class="tab-pane active">
+    <div class="page-header">
+      <div>
+        <h1>Monitor</h1>
+        <p class="page-sub">Real-time email processing pipeline</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-success" id="btn-start" onclick="startMonitor()">▶ Start</button>
+        <button class="btn btn-danger" id="btn-stop" onclick="stopMonitor()" disabled>⏹ Stop</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Processed</div>
+        <div class="stat-value" id="s-processed">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Replies Sent</div>
+        <div class="stat-value green" id="s-sent">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Skipped</div>
+        <div class="stat-value amber" id="s-skipped">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg QA Score</div>
+        <div class="stat-value teal" id="s-qa">—</div>
+      </div>
+    </div>
+
+    <div class="pipeline-steps">
+      <div class="step" id="step-1"><div class="step-num">1</div><div class="step-label">Detect Language &amp; Tone</div></div>
+      <div class="step-arrow">→</div>
+      <div class="step" id="step-2"><div class="step-num">2</div><div class="step-label">Translate to English</div></div>
+      <div class="step-arrow">→</div>
+      <div class="step" id="step-3"><div class="step-num">3</div><div class="step-label">Draft AI Reply</div></div>
+      <div class="step-arrow">→</div>
+      <div class="step" id="step-4"><div class="step-num">4</div><div class="step-label">Translate Back + QA</div></div>
+      <div class="step-arrow">→</div>
+      <div class="step" id="step-5"><div class="step-num">5</div><div class="step-label">Send SMTP Reply</div></div>
+    </div>
+
+    <div class="console-header">
+      <span>Live Log</span>
+      <button class="btn-ghost" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="console" id="console"></div>
+  </div>
+
+  <!-- ── INBOX TAB ── -->
+  <div id="tab-inbox" class="tab-pane">
+    <div class="page-header">
+      <div>
+        <h1>Processed Emails</h1>
+        <p class="page-sub">All emails handled this session</p>
+      </div>
+      <button class="btn btn-ghost" onclick="loadEmails()">↻ Refresh</button>
+    </div>
+
+    <div id="email-list">
+      <div class="empty-state">No emails processed yet. Start the monitor to begin.</div>
+    </div>
+
+    <div id="email-detail" class="email-detail hidden">
+      <div class="detail-header">
+        <h2 id="detail-subject"></h2>
+        <button class="btn-ghost" onclick="closeDetail()">✕ Close</button>
+      </div>
+      <div class="detail-meta" id="detail-meta"></div>
+      <div class="detail-section">
+        <div class="detail-label">Original (English)</div>
+        <div class="detail-body" id="detail-original"></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">English Draft</div>
+        <div class="detail-body" id="detail-english"></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Final Reply (Native Language)</div>
+        <div class="detail-body" id="detail-native"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONFIG TAB ── -->
+  <div id="tab-config" class="tab-pane">
+    <div class="page-header">
+      <div>
+        <h1>Configuration</h1>
+        <p class="page-sub">Credentials, models, and persona settings</p>
+      </div>
+    </div>
+
+    <div class="config-grid">
+      <div class="config-card">
+        <div class="config-card-title">📧 Gmail Credentials</div>
+        <div class="field-group">
+          <label>Gmail Address</label>
+          <input type="email" id="cfg-email" placeholder="you@gmail.com"/>
+        </div>
+        <div class="field-group">
+          <label>App Password <span class="hint">(not your real password — <a href="https://myaccount.google.com/apppasswords" target="_blank">generate here</a>)</span></label>
+          <input type="password" id="cfg-pass" placeholder="xxxx xxxx xxxx xxxx"/>
+        </div>
+        <div class="field-group">
+          <label>Poll Interval (seconds)</label>
+          <input type="number" id="cfg-poll" value="30" min="10" max="600"/>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">🔑 NVIDIA API</div>
+        <div class="field-group">
+          <label>API Key <span class="hint">(<a href="https://integrate.api.nvidia.com" target="_blank">get it here</a>)</span></label>
+          <input type="password" id="cfg-nvapi" placeholder="nvapi-..."/>
+        </div>
+        <div class="field-group">
+          <label>Fast Model (language detection, QA)</label>
+          <input type="text" id="cfg-fast" value="meta/llama-3.1-8b-instruct"/>
+        </div>
+        <div class="field-group">
+          <label>Strong Model (translation, drafting)</label>
+          <input type="text" id="cfg-strong" value="meta/llama-3.3-70b-instruct"/>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">👤 Persona Profile</div>
+        <div class="field-group">
+          <label>Full Name</label>
+          <input type="text" id="cfg-name" value="Boddu Vishnu Vardhan Reddy"/>
+        </div>
+        <div class="field-group">
+          <label>University</label>
+          <input type="text" id="cfg-uni" value="Amity University"/>
+        </div>
+        <div class="field-group">
+          <label>Field / Focus</label>
+          <input type="text" id="cfg-field" value="CSE — Python, NLP, GATE prep"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="save-row">
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Save Configuration</button>
+      <span class="save-msg" id="save-msg"></span>
+    </div>
+
+    <div class="config-card" style="margin-top:1.5rem">
+      <div class="config-card-title">🚀 How to deploy on Railway</div>
+      <ol class="deploy-steps">
+        <li>Download all files → push to a new GitHub repository</li>
+        <li>Go to <a href="https://railway.app" target="_blank">railway.app</a> → New Project → Deploy from GitHub</li>
+        <li>Select your repo → Railway auto-detects Python + installs requirements</li>
+        <li>In Railway dashboard → Variables → add: <code>EMAIL_USER</code>, <code>EMAIL_PASS</code>, <code>NVAPI_KEY</code></li>
+        <li>Railway gives you a live <code>https://yourapp.railway.app</code> URL instantly</li>
+      </ol>
+    </div>
+  </div>
+
+</main>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
